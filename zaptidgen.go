@@ -15,6 +15,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"log"
 	"net"
 
@@ -39,15 +40,17 @@ type server struct {
 func (s *server) Gen(ctx context.Context, input *pb.IdRequest) (*pb.IdResponse, error) {
 	errorCode := false
 	sequence := uint64(0)
+	var returnError error = nil
 	if flake == nil {
 		logger.Panicf("FATAL ERROR: Couldn't generate sonyflake.NewSonyflake.\n")
 	}
 	sequence, err := flake.NextID()
 	if err != nil {
 		errorCode = true
+		returnError = errors.New("NextID failed")
 		log.Printf("ERROR: flake.NextID() failed with %s\n", err)
 	}
-	return &pb.IdResponse{Error: errorCode, Id: sequence}, nil
+	return &pb.IdResponse{Error: errorCode, Id: sequence}, returnError
 }
 
 // This is zapt.chat ID generator server.
